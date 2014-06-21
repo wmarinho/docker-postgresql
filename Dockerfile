@@ -9,6 +9,10 @@ FROM ubuntu:latest
 
 MAINTAINER Wellington Marinho wpmarinho@globo.com
 
+# avoid debconf and initrd
+ENV DEBIAN_FRONTEND noninteractive
+ENV INITRD No
+
 # Add the PostgreSQL PGP key to verify their Debian packages.
 # It should be the same key as https://www.postgresql.org/media/keys/ACCC4CF8.asc 
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
@@ -26,6 +30,15 @@ RUN echo "host all  all    0.0.0.0/0  md5" >> /etc/postgresql/9.3/main/pg_hba.co
 
 # Expose the PostgreSQL port
 EXPOSE 5432
+
+# upgrade distro
+RUN locale-gen en_US en_US.UTF-8
+RUN apt-get update && apt-get upgrade -y
+RUN apt-get install lsb-release -y
+
+# clean packages
+RUN apt-get clean
+RUN rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*
 
 # Add VOLUMEs to allow backup of config, logs and databases
 VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
