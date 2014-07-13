@@ -33,11 +33,14 @@ RUN apt-get install lsb-release -y
 RUN apt-get clean
 RUN rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*
 
+
 USER postgres
 
-RUN    /etc/init.d/postgresql start &&\
-    psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
-    createdb -O docker docker
+RUN /etc/init.d/postgresql start &&\
+    psql --command "update pg_database set encoding = 6, datcollate = 'en_US.UTF8', datctype = 'en_US.UTF8' where datname = 'template0';" &&\
+    psql --command "update pg_database set encoding = 6, datcollate = 'en_US.UTF8', datctype = 'en_US.UTF8' where datname = 'template1';" &&\
+    psql --command "update pg_database set encoding = 6, datcollate = 'en_US.UTF8', datctype = 'en_US.UTF8' where datname = 'postgres';" &&\
+    psql --command "CREATE USER pgadmin WITH SUPERUSER PASSWORD 'pgadmin';"
 
 # Adjust PostgreSQL configuration so that remote connections to the
 # database are possible. 
