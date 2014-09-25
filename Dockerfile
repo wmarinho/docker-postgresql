@@ -5,13 +5,13 @@
 # Pull from Ubuntu
 
 
-FROM ubuntu:latest
+FROM ubuntu:14.04
 
 MAINTAINER Wellington Marinho wpmarinho@globo.com
 
 # avoid debconf and initrd
-ENV DEBIAN_FRONTEND noninteractive
-ENV INITRD No
+#ENV DEBIAN_FRONTEND noninteractive
+#ENV INITRD No
 
 # Add the PostgreSQL PGP key to verify their Debian packages.
 # It should be the same key as https://www.postgresql.org/media/keys/ACCC4CF8.asc 
