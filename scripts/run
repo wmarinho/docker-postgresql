@@ -1,0 +1,29 @@
+#!/bin/bash
+set -e
+
+PSQL_USER=${PSQL_USER:-"docker"}
+PSQL_PASS=${PSQL_PASS:-"docker"}
+PSQL_DB=${PSQL_DB:-"docker"}
+PSQL_TEMPLATE=${PSQL_TEMPLATE:-"DEFAULT"}
+
+PSQL_BIN=/usr/lib/postgresql/9.3/bin/postgres
+PSQL_CONFIG_FILE=/etc/postgresql/9.3/main/postgresql.conf
+PSQL_DATA=/var/lib/postgresql/9.3/main
+
+PSQL_SINGLE="sudo -u postgres $PSQL_BIN --single --config-file=$PSQL_CONFIG_FILE"
+
+if [ ! -d $PSQL_DATA ]; then
+    mkdir -p $PSQL_DATA
+    chown -R postgres:postgres $PSQL_DATA
+    sudo -u postgres /usr/lib/postgresql/9.3/bin/initdb -D $PSQL_DATA -E 'UTF-8'
+    echo "host all  all    0.0.0.0/0  md5" >> /etc/postgresql/9.3/main/pg_hba.conf 
+    echo "listen_addresses='*'" >> /etc/postgresql/9.3/main/postgresql.conf
+    ln -s /etc/ssl/certs/ssl-cert-snakeoil.pem $PSQL_DATA/server.crt
+    ln -s /etc/ssl/private/ssl-cert-snakeoil.key $PSQL_DATA/server.key
+fi
+
+$PSQL_SINGLE <<< "CREATE USER $PSQL_USER WITH SUPERUSER;" > /dev/null
+$PSQL_SINGLE <<< "ALTER USER $PSQL_USER WITH PASSWORD '$PSQL_PASS';" > /dev/null
+$PSQL_SINGLE <<< "CREATE DATABASE $PSQL_DB OWNER $PSQL_USER TEMPLATE $PSQL_TEMPLATE;" > /dev/null
+
+exec sudo -u postgres $PSQL_BIN --config-file=$PSQL_CONFIG_FILE

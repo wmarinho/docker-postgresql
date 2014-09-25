@@ -10,8 +10,8 @@ FROM ubuntu:14.04
 MAINTAINER Wellington Marinho wpmarinho@globo.com
 
 # avoid debconf and initrd
-#ENV DEBIAN_FRONTEND noninteractive
-#ENV INITRD No
+ENV DEBIAN_FRONTEND noninteractive
+ENV INITRD No
 
 # Add the PostgreSQL PGP key to verify their Debian packages.
 # It should be the same key as https://www.postgresql.org/media/keys/ACCC4CF8.asc 
@@ -34,24 +34,27 @@ RUN apt-get clean
 RUN rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*
 
 
-USER postgres
+#USER postgres
 
-RUN /etc/init.d/postgresql start &&\
-    psql --command "update pg_database set encoding = 6, datcollate = 'en_US.UTF8', datctype = 'en_US.UTF8' where datname = 'template0';" &&\
-    psql --command "update pg_database set encoding = 6, datcollate = 'en_US.UTF8', datctype = 'en_US.UTF8' where datname = 'template1';" &&\
-    psql --command "update pg_database set encoding = 6, datcollate = 'en_US.UTF8', datctype = 'en_US.UTF8' where datname = 'postgres';" &&\
-    psql --command "CREATE USER pgadmin WITH SUPERUSER PASSWORD 'pgadmin.';"
+#RUN /etc/init.d/postgresql start &&\
+#    psql --command "update pg_database set encoding = 6, datcollate = 'en_US.UTF8', datctype = 'en_US.UTF8' where datname = 'template0';" &&\
+#    psql --command "update pg_database set encoding = 6, datcollate = 'en_US.UTF8', datctype = 'en_US.UTF8' where datname = 'template1';" &&\
+#    psql --command "update pg_database set encoding = 6, datcollate = 'en_US.UTF8', datctype = 'en_US.UTF8' where datname = 'postgres';" &&\
+#    psql --command "CREATE USER pgadmin WITH SUPERUSER PASSWORD 'pgadmin.';"
 
 # Adjust PostgreSQL configuration so that remote connections to the
 # database are possible. 
-RUN echo "host all  all    0.0.0.0/0  md5" >> /etc/postgresql/9.3/main/pg_hba.conf && echo "listen_addresses='*'" >> /etc/postgresql/9.3/main/postgresql.conf
+#RUN echo "host all  all    0.0.0.0/0  md5" >> /etc/postgresql/9.3/main/pg_hba.conf && echo "listen_addresses='*'" >> /etc/postgresql/9.3/main/postgresql.conf
+
+ADD scripts/run /usr/local/bin/run
+RUN chmod +x /usr/local/bin/run
 
 # Expose the PostgreSQL port
 EXPOSE 5432
 
 # Add VOLUMEs to allow backup of config, logs and databases
 VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
-
+CMD ["/usr/local/bin/run"]
 # Set the default command to run when starting the container
-CMD ["/usr/lib/postgresql/9.3/bin/postgres", "-D", "/var/lib/postgresql/9.3/main", "-c", "config_file=/etc/postgresql/9.3/main/postgresql.conf"]
+#CMD ["/usr/lib/postgresql/9.3/bin/postgres", "-D", "/var/lib/postgresql/9.3/main", "-c", "config_file=/etc/postgresql/9.3/main/postgresql.conf"]
 
